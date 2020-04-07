@@ -1,7 +1,4 @@
-#ifndef PLANNER_H
-#define PLANNER_H
-
-#include "spdlog/spdlog.h"
+#pragma once
 
 using std::vector;
 
@@ -13,8 +10,6 @@ void plan_motion(uint &lane, double &target_vel, float &spline_dist_,
                  const float &spline_dist, const double &front_margin) {
   // Planning (lane selection and velocity update)
   if (!lane_avails[lane]) {
-    spdlog::info("Lane availability: {} | {} | {}", lane_avails[0],
-                 lane_avails[1], lane_avails[2]);
     // Check is lane change is possible
     if (((lane > 0) && lane_avails[lane - 1]) ||
         ((lane < 2) && lane_avails[lane + 1])) {
@@ -62,5 +57,3 @@ void plan_motion(uint &lane, double &target_vel, float &spline_dist_,
     }
   }
 }
-
-#endif  // PLANNER_H

@@ -1,9 +1,10 @@
-#ifndef PERCEPTION_H
-#define PERCEPTION_H
+#pragma once
 
 #include "helpers.h"
 
 using std::vector;
+
+Helpers helpers;
 
 void update_perception(std::array<double, 3> &front_margins,
                        std::array<double, 3> &rear_margins,
@@ -26,16 +27,14 @@ void update_perception(std::array<double, 3> &front_margins,
     if (car_s_ > car_s) {
       if ((car_s_ - car_s) < front_margins[lane_]) {
         front_margins[lane_] = car_s_ - car_s;
-        front_speeds[lane_] = mpersec_to_mph(speed_);
+        front_speeds[lane_] = helpers.mpersec_to_mph(speed_);
       }
       // Vehicle behind
     } else {
       if ((car_s - car_s_) < rear_margins[lane_]) {
         rear_margins[lane_] = car_s - car_s_;
-        rear_speeds[lane_] = mpersec_to_mph(speed_);
+        rear_speeds[lane_] = helpers.mpersec_to_mph(speed_);
       }
     }
   }
 }
-
-#endif  // PERCEPTION_H
