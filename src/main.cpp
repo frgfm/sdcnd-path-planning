@@ -7,6 +7,8 @@
 #include "Eigen/QR"
 #include "helpers.h"
 #include "json.hpp"
+#include "perception.h"
+#include "planner.h"
 #include "spdlog/spdlog.h"
 #include "spline.h"
 
@@ -39,7 +41,7 @@ int main() {
 
   // Lanes are numbered (0 | 1 | 2)
   // Start on lane 1 (middle lane)
-  int lane = 1;
+  uint lane = 1;
 
   // Inicial velocity, and also reference velocity to target.
   double current_vel = 0.0;               // mph
@@ -48,16 +50,17 @@ int main() {
   const double vel_delta = 3 * .224;      // 5m/s
   const double controller_refresh = .02;  // second
   const float lane_width = 4;             // m
-  const double security_dist = 30;        // m
+  const double front_margin = 30;         // m
+  const double rear_margin = 5;           // m
 
   // True when the ego-car is changing lane.
   bool is_changing_lane = false;
   double end_change_lane_s = 0.0;
 
   h.onMessage([&map_waypoints, &lane, &current_vel, &vel_delta, &target_vel,
-               &controller_refresh, &lane_width, &spline_dist,
-               &security_dist](uWS::WebSocket<uWS::SERVER> ws, char *data,
-                               size_t length, uWS::OpCode opCode) {
+               &controller_refresh, &lane_width, &spline_dist, &front_margin,
+               &rear_margin](uWS::WebSocket<uWS::SERVER> ws, char *data,
+                             size_t length, uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
@@ -98,91 +101,48 @@ int main() {
             car_s = end_path_s;
           }
 
-          bool slow_down = false;
-          std::array<bool, 3> is_lane_free = {true, true, true};
-          double lane_speeds[3] = {target_vel, target_vel, target_vel};
-          double lane_margins[3] = {std::numeric_limits<double>::infinity(),
-                                    std::numeric_limits<double>::infinity(),
-                                    std::numeric_limits<double>::infinity()};
+          // Perception
+          std::array<double, 3> front_margins = {
+              std::numeric_limits<double>::infinity(),
+              std::numeric_limits<double>::infinity(),
+              std::numeric_limits<double>::infinity()};
+          std::array<double, 3> rear_margins = {
+              std::numeric_limits<double>::infinity(),
+              std::numeric_limits<double>::infinity(),
+              std::numeric_limits<double>::infinity()};
+          std::array<double, 3> front_speeds;
+          std::array<double, 3> rear_speeds;
 
-          // Loop on obstacles (vehicles) detected with sensor fusion
-          for (uint i = 0; i < sensor_fusion.size(); i++) {
-            // Check if lane is free to move to
-            double check_car_s = sensor_fusion[i][5];
-            float d = sensor_fusion[i][6];
-            double check_speed =
-                sqrt(pow(static_cast<double>(sensor_fusion[i][3]), 2) +
-                     pow(static_cast<double>(sensor_fusion[i][4]), 2));
-            check_car_s += (static_cast<double>(prev_size) *
-                            controller_refresh * check_speed);
-            int lane_ = static_cast<int>(d / lane_width);
-            // Check if there is a car ahead of us in this lane
-            if ((check_car_s >= car_s - 5) &&
-                (check_car_s < car_s + security_dist)) {
-              is_lane_free[lane_] = false;
-              // Shadow velocity of ahead vehicle (no need to slow down further)
-              if ((check_car_s > car_s) &&
-                  ((check_car_s - car_s) < lane_margins[lane_])) {
-                // Meter /s --> Miles per hour
-                lane_speeds[lane_] = check_speed / 1.60934 * 3.6;
-                lane_margins[lane_] = check_car_s - car_s;
-              }
-            }
+          // Use sensor fusion to update perception
+          update_perception(front_margins, rear_margins, front_speeds,
+                            rear_speeds, sensor_fusion,
+                            static_cast<double>(prev_size) * controller_refresh,
+                            lane_width, car_s);
+
+          // Define lane availability
+          std::array<bool, 3> lane_avails = {true, true, true};
+          std::array<bool, 3> lane_transitions = {true, true, true};
+          for (uint i = 0; i < lane_avails.size(); i++) {
+            lane_avails[i] = (front_margins[i] > front_margin) &&
+                             (rear_margins[i] > rear_margin);
+            // Allow transition through lanes with lower front margin
+            lane_transitions[i] = (front_margins[i] > (front_margin / 2)) &&
+                                  (rear_margins[i] > rear_margin);
           }
 
-          // Plan lane change
-          double s_speed;
           float spline_dist_ = spline_dist;
-          if (!is_lane_free[lane]) {
-            // See if there is any free lane accessible
-            if (((lane > 0) && (is_lane_free[lane - 1])) ||
-                ((lane < 2) && (is_lane_free[lane + 1]))) {
-              // Lane selection
-              int best_lane = lane;
-              double max_margin = security_dist;
+          // bool slow_down = false;
+          double target_vel_ = target_vel;
 
-              // Check best lane
-              for (int i = 0; i < is_lane_free.size(); i++) {
-                // Good candidate
-                if (is_lane_free[i] && (lane_margins[i] > max_margin)) {
-                  // Check that all lanes inbetween are free for us to perform
-                  // lane change edge case: 2 lane difference
-                  if (fabs(lane - i) == 2) {
-                    uint lane_ = lane;
-                    if (i > lane) {
-                      lane_ += 1;
-                    } else {
-                      lane_ -= 1;
-                    }
-                    if (!is_lane_free[lane_]) {
-                      continue;
-                    } else {
-                      // Limit jerk by changing spline interpolation
-                      spline_dist_ = 2 * spline_dist;
-                    }
-                  } else {
-                    spline_dist_ = spline_dist;
-                  }
-                  best_lane = i;
-                  max_margin = lane_margins[i];
-                }
-              }
+          // Perform lane selection and velocity update
+          plan_motion(lane, target_vel_, spline_dist_, lane_avails,
+                      lane_transitions, front_margins, front_speeds,
+                      spline_dist, front_margin);
 
-              // Go to the nearby lane with longest vehicle-free distance ahead
-              lane = best_lane;
-            } else {
-              // Can't change lane --> slow down for now
-              slow_down = true;
-              s_speed = lane_speeds[lane];
-            }
-          }
-
-          if (slow_down) {
-            // Match a given speed
-            if (current_vel > s_speed) {
-              current_vel -= vel_delta;
-            }
-          } else if (current_vel < target_vel) {
+          // Speed regulator
+          if (current_vel > target_vel_) {
+            current_vel -= vel_delta;
+          } else {
             current_vel += vel_delta;
           }
 
