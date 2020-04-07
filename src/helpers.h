@@ -155,3 +155,41 @@ vector<double> getXY(double s, double d, const vector<double> &maps_s,
 }
 
 #endif  // HELPERS_H
+
+inline bool read_map_data(std::string filename, vector<double> &map_x,
+                          vector<double> &map_y, vector<double> &map_s,
+                          vector<double> &map_dx, vector<double> &map_dy) {
+  // Get file of map
+  std::ifstream in_map_(filename.c_str(), std::ifstream::in);
+  //  Return if we can't open the file
+  if (!in_map_) {
+    return false;
+  }
+
+  // Declare single line of map file
+  std::string line;
+
+  // Run over each single line
+  while (getline(in_map_, line)) {
+    std::istringstream iss(line);
+    // Declaration
+    double x;
+    double y;
+    float s;
+    float d_x;
+    float d_y;
+    // Read data from current line to values
+    iss >> x;
+    iss >> y;
+    iss >> s;
+    iss >> d_x;
+    iss >> d_y;
+    // Add waypoints
+    map_x.push_back(x);
+    map_y.push_back(y);
+    map_s.push_back(s);
+    map_dx.push_back(d_x);
+    map_dy.push_back(d_y);
+  }
+  return true;
+}
