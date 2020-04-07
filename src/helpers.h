@@ -132,7 +132,8 @@ vector<double> getXY(double s, double d, const vector<double> &maps_s,
                      const vector<double> &maps_y) {
   int prev_wp = -1;
 
-  while (s > maps_s[prev_wp + 1] && (prev_wp < (int)(maps_s.size() - 1))) {
+  while (s > maps_s[prev_wp + 1] &&
+         (prev_wp < static_cast<int>(maps_s.size() - 1))) {
     ++prev_wp;
   }
 
