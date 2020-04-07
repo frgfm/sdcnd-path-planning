@@ -20,14 +20,9 @@ int main() {
   uWS::Hub h;
 
   // Load up map values for waypoint's x,y,s and d normalized normal vectors
-  vector<double> map_waypoints_x;
-  vector<double> map_waypoints_y;
-  vector<double> map_waypoints_s;
-  vector<double> map_waypoints_dx;
-  vector<double> map_waypoints_dy;
+  // x, y, s, dx, dy
+  std::array<vector<double>, 5> map_waypoints;
 
-  // Waypoint map to read from
-  string map_file_ = "../data/highway_map.csv";
   // Map data safeguard
   struct PPException : public exception {
     const char *what() const throw() {
@@ -35,9 +30,7 @@ int main() {
     }
   };
 
-  if (!read_map_data("../data/highway_map.csv", map_waypoints_x,
-                     map_waypoints_y, map_waypoints_s, map_waypoints_dx,
-                     map_waypoints_dy)) {
+  if (!read_map_data("../data/highway_map.csv", map_waypoints)) {
     spdlog::error("Unable to access highway map file!");
     throw PPException();
   }
@@ -60,9 +53,8 @@ int main() {
   bool is_changing_lane = false;
   double end_change_lane_s = 0.0;
 
-  h.onMessage([&map_waypoints_x, &map_waypoints_y, &map_waypoints_s,
-               &map_waypoints_dx, &map_waypoints_dy, &lane, &current_vel,
-               &vel_delta, &target_vel, &controller_refresh, &lane_width,
+  h.onMessage([&map_waypoints, &lane, &current_vel, &vel_delta, &target_vel,
+               &controller_refresh, &lane_width,
                &security_dist](uWS::WebSocket<uWS::SERVER> ws, char *data,
                                size_t length, uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
@@ -190,14 +182,14 @@ int main() {
 
           // In Frenet coords, add 30m spaced waypoints ahead of starting ref
           vector<double> next_wp0 =
-              getXY(car_s + 30, lane_width * (lane + 0.5), map_waypoints_s,
-                    map_waypoints_x, map_waypoints_y);
+              getXY(car_s + 30, lane_width * (lane + 0.5), map_waypoints[2],
+                    map_waypoints[0], map_waypoints[1]);
           vector<double> next_wp1 =
-              getXY(car_s + 60, lane_width * (lane + 0.5), map_waypoints_s,
-                    map_waypoints_x, map_waypoints_y);
+              getXY(car_s + 60, lane_width * (lane + 0.5), map_waypoints[2],
+                    map_waypoints[0], map_waypoints[1]);
           vector<double> next_wp2 =
-              getXY(car_s + 90, lane_width * (lane + 0.5), map_waypoints_s,
-                    map_waypoints_x, map_waypoints_y);
+              getXY(car_s + 90, lane_width * (lane + 0.5), map_waypoints[2],
+                    map_waypoints[0], map_waypoints[1]);
 
           ptsx.push_back(next_wp0[0]);
           ptsx.push_back(next_wp1[0]);

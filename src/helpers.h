@@ -155,11 +155,8 @@ vector<double> getXY(double s, double d, const vector<double> &maps_s,
   return {x, y};
 }
 
-#endif  // HELPERS_H
-
-inline bool read_map_data(std::string filename, vector<double> &map_x,
-                          vector<double> &map_y, vector<double> &map_s,
-                          vector<double> &map_dx, vector<double> &map_dy) {
+bool read_map_data(std::string filename,
+                   std::array<vector<double>, 5> &map_waypoints) {
   // Get file of map
   std::ifstream in_map_(filename.c_str(), std::ifstream::in);
   //  Return if we can't open the file
@@ -174,11 +171,8 @@ inline bool read_map_data(std::string filename, vector<double> &map_x,
   while (getline(in_map_, line)) {
     std::istringstream iss(line);
     // Declaration
-    double x;
-    double y;
-    float s;
-    float d_x;
-    float d_y;
+    double x, y;
+    float s, d_x, d_y;
     // Read data from current line to values
     iss >> x;
     iss >> y;
@@ -186,11 +180,13 @@ inline bool read_map_data(std::string filename, vector<double> &map_x,
     iss >> d_x;
     iss >> d_y;
     // Add waypoints
-    map_x.push_back(x);
-    map_y.push_back(y);
-    map_s.push_back(s);
-    map_dx.push_back(d_x);
-    map_dy.push_back(d_y);
+    map_waypoints[0].push_back(x);
+    map_waypoints[1].push_back(y);
+    map_waypoints[2].push_back(s);
+    map_waypoints[3].push_back(d_x);
+    map_waypoints[4].push_back(d_y);
   }
   return true;
 }
+
+#endif  // HELPERS_H
