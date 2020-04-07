@@ -133,10 +133,25 @@ int main() {
           double s_speed;
           if (!is_lane_free[lane]) {
             // See if there is any free lane
-            if ((lane > 0) && (is_lane_free[lane - 1])) {
-              lane -= 1;
-            } else if ((lane < 2) && (is_lane_free[lane + 1])) {
-              lane += 1;
+            if (((lane > 0) && (is_lane_free[lane - 1])) ||
+                ((lane < 2) && (is_lane_free[lane + 1]))) {
+              // Lane selection
+              int best_lane = lane;
+              double best_dist = security_dist;
+
+              if ((lane > 0) && (is_lane_free[lane - 1]) &&
+                  (lane_margins[lane - 1] > best_dist)) {
+                // Left lane
+                best_lane = lane - 1;
+                best_dist = lane_margins[lane - 1];
+              } else if ((lane < 2) && (is_lane_free[lane + 1]) &&
+                         (lane_margins[lane + 1] > best_dist)) {
+                // Right lane
+                best_lane = lane + 1;
+                best_dist = lane_margins[lane + 1];
+              }
+              // Go to the nearby lane with longest vehicle-free distance ahead
+              lane = best_lane;
             } else {
               // Can't change lane --> slow down for now
               slow_down = true;
@@ -145,7 +160,11 @@ int main() {
           }
 
           if (slow_down) {
-            current_vel -= vel_delta;
+            // Match a given speed
+            if (current_vel > s_speed) {
+              current_vel -= vel_delta;
+            }
+            // current_vel -= vel_delta;
           } else if (current_vel < target_vel) {
             current_vel += vel_delta;
           }
