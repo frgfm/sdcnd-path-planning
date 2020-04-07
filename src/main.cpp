@@ -46,8 +46,8 @@ int main() {
   const double target_vel = 49.7;         // mph
   const double vel_delta = 3 * .224;      // 5m/s
   const double controller_refresh = .02;  // second
-  const float lane_width = 4;
-  const double security_dist = 30;
+  const float lane_width = 4;             // m
+  const double security_dist = 30;        // m
 
   // True when the ego-car is changing lane.
   bool is_changing_lane = false;
