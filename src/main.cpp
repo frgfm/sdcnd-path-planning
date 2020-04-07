@@ -98,7 +98,7 @@ int main() {
           }
 
           bool slow_down = false;
-          bool is_lane_free[3] = {true, true, true};
+          std::array<bool, 3> is_lane_free = {true, true, true};
           double lane_speeds[3] = {target_vel, target_vel, target_vel};
           double lane_margins[3] = {std::numeric_limits<double>::infinity(),
                                     std::numeric_limits<double>::infinity(),
@@ -132,24 +132,35 @@ int main() {
           // Plan lane change
           double s_speed;
           if (!is_lane_free[lane]) {
-            // See if there is any free lane
+            // See if there is any free lane accessible
             if (((lane > 0) && (is_lane_free[lane - 1])) ||
                 ((lane < 2) && (is_lane_free[lane + 1]))) {
               // Lane selection
               int best_lane = lane;
-              double best_dist = security_dist;
+              double max_margin = security_dist;
 
-              if ((lane > 0) && (is_lane_free[lane - 1]) &&
-                  (lane_margins[lane - 1] > best_dist)) {
-                // Left lane
-                best_lane = lane - 1;
-                best_dist = lane_margins[lane - 1];
-              } else if ((lane < 2) && (is_lane_free[lane + 1]) &&
-                         (lane_margins[lane + 1] > best_dist)) {
-                // Right lane
-                best_lane = lane + 1;
-                best_dist = lane_margins[lane + 1];
+              // Check best lane
+              for (int i = 0; i < is_lane_free.size(); i++) {
+                // Good candidate
+                if (is_lane_free[i] && (lane_margins[i] > max_margin)) {
+                  // Check that all lanes inbetween are free for us to perform
+                  // lane change edge case: 2 lane difference
+                  if (fabs(lane - i) == 2) {
+                    uint lane_ = lane;
+                    if (i > lane) {
+                      lane_ += 1;
+                    } else {
+                      lane_ -= 1;
+                    }
+                    if (!is_lane_free[lane_]) {
+                      continue;
+                    }
+                  }
+                  best_lane = i;
+                  max_margin = lane_margins[i];
+                }
               }
+
               // Go to the nearby lane with longest vehicle-free distance ahead
               lane = best_lane;
             } else {
