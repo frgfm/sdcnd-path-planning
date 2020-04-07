@@ -98,20 +98,20 @@ int main() {
           }
 
           bool slow_down = false;
-          vector<bool> is_lane_free = {true, true, true};
-          vector<double> ahead_speed = {target_vel, target_vel, target_vel};
-          vector<double> ahead_dist = {std::numeric_limits<double>::infinity(),
-                                       std::numeric_limits<double>::infinity(),
-                                       std::numeric_limits<double>::infinity()};
+          bool is_lane_free[3] = {true, true, true};
+          double lane_speeds[3] = {target_vel, target_vel, target_vel};
+          double lane_margins[3] = {std::numeric_limits<double>::infinity(),
+                                    std::numeric_limits<double>::infinity(),
+                                    std::numeric_limits<double>::infinity()};
 
           // Loop on obstacles (vehicles) detected with sensor fusion
           for (uint i = 0; i < sensor_fusion.size(); i++) {
             // Check if lane is free to move to
-            double vx = sensor_fusion[i][3];
-            double vy = sensor_fusion[i][4];
             double check_car_s = sensor_fusion[i][5];
             float d = sensor_fusion[i][6];
-            double check_speed = sqrt(pow(vx, 2) + pow(vy, 2));
+            double check_speed =
+                sqrt(pow(static_cast<double>(sensor_fusion[i][3]), 2) +
+                     pow(static_cast<double>(sensor_fusion[i][4]), 2));
             check_car_s += (static_cast<double>(prev_size) *
                             controller_refresh * check_speed);
             int lane_ = static_cast<int>(d / lane_width);
@@ -120,9 +120,11 @@ int main() {
                 (check_car_s < car_s + security_dist)) {
               is_lane_free[lane_] = false;
               // Shadow velocity of ahead vehicle (no need to slow down further)
-              if ((check_car_s > car_s) && (check_car_s < ahead_speed[lane_])) {
-                ahead_speed[lane_] = check_speed;
-                ahead_dist[lane_] = check_car_s;
+              if ((check_car_s > car_s) &&
+                  ((check_car_s - car_s) < lane_margins[lane_])) {
+                // Meter /s --> Miles per hour
+                lane_speeds[lane_] = check_speed / 1.60934 * 3.6;
+                lane_margins[lane_] = check_car_s - car_s;
               }
             }
           }
@@ -138,7 +140,7 @@ int main() {
             } else {
               // Can't change lane --> slow down for now
               slow_down = true;
-              s_speed = ahead_speed[lane];
+              s_speed = lane_speeds[lane];
             }
           }
 
