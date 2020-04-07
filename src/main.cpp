@@ -43,6 +43,7 @@ int main() {
 
   // Inicial velocity, and also reference velocity to target.
   double current_vel = 0.0;               // mph
+  const float spline_dist = 30;           // m
   const double target_vel = 49.7;         // mph
   const double vel_delta = 3 * .224;      // 5m/s
   const double controller_refresh = .02;  // second
@@ -54,7 +55,7 @@ int main() {
   double end_change_lane_s = 0.0;
 
   h.onMessage([&map_waypoints, &lane, &current_vel, &vel_delta, &target_vel,
-               &controller_refresh, &lane_width,
+               &controller_refresh, &lane_width, &spline_dist,
                &security_dist](uWS::WebSocket<uWS::SERVER> ws, char *data,
                                size_t length, uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
@@ -131,6 +132,7 @@ int main() {
 
           // Plan lane change
           double s_speed;
+          float spline_dist_ = spline_dist;
           if (!is_lane_free[lane]) {
             // See if there is any free lane accessible
             if (((lane > 0) && (is_lane_free[lane - 1])) ||
@@ -154,7 +156,12 @@ int main() {
                     }
                     if (!is_lane_free[lane_]) {
                       continue;
+                    } else {
+                      // Limit jerk by changing spline interpolation
+                      spline_dist_ = 2 * spline_dist;
                     }
+                  } else {
+                    spline_dist_ = spline_dist;
                   }
                   best_lane = i;
                   max_margin = lane_margins[i];
@@ -213,14 +220,14 @@ int main() {
 
           // In Frenet coords, add 30m spaced waypoints ahead of starting ref
           vector<double> next_wp0 =
-              getXY(car_s + 30, lane_width * (lane + 0.5), map_waypoints[2],
-                    map_waypoints[0], map_waypoints[1]);
+              getXY(car_s + spline_dist_, lane_width * (lane + 0.5),
+                    map_waypoints[2], map_waypoints[0], map_waypoints[1]);
           vector<double> next_wp1 =
-              getXY(car_s + 60, lane_width * (lane + 0.5), map_waypoints[2],
-                    map_waypoints[0], map_waypoints[1]);
+              getXY(car_s + 2 * spline_dist_, lane_width * (lane + 0.5),
+                    map_waypoints[2], map_waypoints[0], map_waypoints[1]);
           vector<double> next_wp2 =
-              getXY(car_s + 90, lane_width * (lane + 0.5), map_waypoints[2],
-                    map_waypoints[0], map_waypoints[1]);
+              getXY(car_s + 3 * spline_dist_, lane_width * (lane + 0.5),
+                    map_waypoints[2], map_waypoints[0], map_waypoints[1]);
 
           ptsx.push_back(next_wp0[0]);
           ptsx.push_back(next_wp1[0]);
