@@ -62,9 +62,9 @@ int main() {
 
   h.onMessage([&map_waypoints_x, &map_waypoints_y, &map_waypoints_s,
                &map_waypoints_dx, &map_waypoints_dy, &lane, &current_vel,
-               &vel_delta, &target_vel](uWS::WebSocket<uWS::SERVER> ws,
-                                        char *data, size_t length,
-                                        uWS::OpCode opCode) {
+               &vel_delta, &target_vel, &controller_refresh, &lane_width,
+               &security_dist](uWS::WebSocket<uWS::SERVER> ws, char *data,
+                               size_t length, uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
@@ -120,8 +120,9 @@ int main() {
             double check_car_s = sensor_fusion[i][5];
             float d = sensor_fusion[i][6];
             double check_speed = sqrt(pow(vx, 2) + pow(vy, 2));
-            check_car_s += ((double)prev_size * .02 * check_speed);
-            int lane_ = (int)(d / lane_width);
+            check_car_s += (static_cast<double>(prev_size) *
+                            controller_refresh * check_speed);
+            int lane_ = static_cast<int>(d / lane_width);
             // Check if there is a car ahead of us in this lane
             if ((check_car_s >= car_s - 5) &&
                 (check_car_s < car_s + security_dist)) {
