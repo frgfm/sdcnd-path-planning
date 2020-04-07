@@ -40,22 +40,26 @@ int main() {
   // Start on lane 1 (middle lane)
   uint lane = 1;
 
-  // Inicial velocity, and also reference velocity to target.
-  double velocity = 0.0;              // mph
-  const float spline_dist = 30;       // m
-  const double target_vel = 49.7;     // mph
-  const double vel_delta = 3 * .224;  // 5m/s
-  const double refresh = .02;         // second
-  const float lane_width = 4;         // m
-  const double front_margin = 30;     // m
-  const double rear_margin = 5;       // m
+  // Inicial velocity in mph, and also reference velocity to target.
+  double velocity = 0.0;
+  // Distance in meters between points that will be interpolated using spline
+  const float spline_dist = 30;
+  // Target velocity (mph)
+  const double target_vel = 49.9;
+  // Velocity step (mph)
+  const double vel_step = 0.7;
+  // Refresh period in seconds
+  const double refresh = .02;  // 50Hz
+  // Lane width in meters
+  const float lane_width = 4;
+  // Margin in meters with vehicle ahead before action in required
+  const double front_margin = 30;
+  // Margin in meters with vehicle behind before action in required
+  const double rear_margin = 5;
 
+  // Instantiate the motion planner and controller
   Planner motion_planner(spline_dist, front_margin, rear_margin, lane_width);
-  Controller controller(vel_delta, lane_width, refresh, map_waypoints);
-
-  // True when the ego-car is changing lane.
-  bool is_changing_lane = false;
-  double end_change_lane_s = 0.0;
+  Controller controller(vel_step, lane_width, refresh, map_waypoints);
 
   h.onMessage([&lane, &velocity, &target_vel, &refresh, &spline_dist,
                &motion_planner, &controller](uWS::WebSocket<uWS::SERVER> ws,
