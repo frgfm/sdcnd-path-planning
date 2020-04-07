@@ -164,7 +164,6 @@ int main() {
             if (current_vel > s_speed) {
               current_vel -= vel_delta;
             }
-            // current_vel -= vel_delta;
           } else if (current_vel < target_vel) {
             current_vel += vel_delta;
           }
