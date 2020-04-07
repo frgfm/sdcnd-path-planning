@@ -35,7 +35,7 @@ double Controller::update_velocity(const double &target_vel) {
   // Speed regulator
   if (velocity > target_vel) {
     velocity -= vel_step;
-  } else {
+  } else if (velocity + vel_step < target_vel) {
     velocity += vel_step;
   }
 
