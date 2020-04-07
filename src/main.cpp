@@ -49,9 +49,12 @@ int main() {
   int lane = 1;
 
   // Inicial velocity, and also reference velocity to target.
-  double current_vel = 0.0;  // mph
-  const double target_vel = 49.7;
-  const double vel_delta = 3 * .224;  // 5m/s
+  double current_vel = 0.0;               // mph
+  const double target_vel = 49.7;         // mph
+  const double vel_delta = 3 * .224;      // 5m/s
+  const double controller_refresh = .02;  // second
+  const float lane_width = 4;
+  const double security_dist = 30;
 
   // True when the ego-car is changing lane.
   bool is_changing_lane = false;
@@ -108,8 +111,6 @@ int main() {
           vector<double> ahead_dist = {std::numeric_limits<double>::infinity(),
                                        std::numeric_limits<double>::infinity(),
                                        std::numeric_limits<double>::infinity()};
-          const float lane_width = 4;
-          const double security_dist = 30;
 
           // Loop on obstacles (vehicles) detected with sensor fusion
           for (uint i = 0; i < sensor_fusion.size(); i++) {
