@@ -189,13 +189,13 @@ int main() {
 
           // In Frenet coords, add 30m spaced waypoints ahead of starting ref
           vector<double> next_wp0 =
-              getXY(car_s + 30, (2 + 4 * lane), map_waypoints_s,
+              getXY(car_s + 30, lane_width * (lane + 0.5), map_waypoints_s,
                     map_waypoints_x, map_waypoints_y);
           vector<double> next_wp1 =
-              getXY(car_s + 60, (2 + 4 * lane), map_waypoints_s,
+              getXY(car_s + 60, lane_width * (lane + 0.5), map_waypoints_s,
                     map_waypoints_x, map_waypoints_y);
           vector<double> next_wp2 =
-              getXY(car_s + 90, (2 + 4 * lane), map_waypoints_s,
+              getXY(car_s + 90, lane_width * (lane + 0.5), map_waypoints_s,
                     map_waypoints_x, map_waypoints_y);
 
           ptsx.push_back(next_wp0[0]);
@@ -238,7 +238,8 @@ int main() {
           // Fill up the rest of our planner, force 50 points
           for (uint i = 1; i <= 50 - previous_path_x.size(); i++) {
             // Miles per hours --> meters / sec
-            double N = (target_dist / (.02 * current_vel / 2.24));
+            double N =
+                (target_dist / (controller_refresh * current_vel / 2.24));
             double x_point = x_add_on + target_x / N;
             double y_point = s(x_point);
             x_add_on = x_point;
