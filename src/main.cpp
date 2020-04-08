@@ -41,25 +41,25 @@ int main() {
   // Inicial velocity in mph, and also reference velocity to target.
   double velocity = 0.0;
   // Distance in meters between points that will be interpolated using spline
-  const float spline_dist = 30;
+  const float SPLINE_DIST = 30;
   // Target velocity (mph)
-  const double target_vel = 49.9;
+  const double TARGET_VELOCITY = 49.9;
   // Velocity step (mph)
-  const double vel_step = 0.7;
+  const double VELOCITY_STEP = 0.7;
   // Refresh period in seconds
-  const double refresh = .02;  // 50Hz
+  const double REFRESH = .02;  // 50Hz
   // Lane width in meters
-  const float lane_width = 4;
+  const float LANE_WIDTH = 4;
   // Margin in meters with vehicle ahead before action in required
-  const double front_margin = 30;
+  const double FRONT_MARGIN = 30;
   // Margin in meters with vehicle behind before action in required
-  const double rear_margin = 5;
+  const double REAR_MARGIN = 5;
 
   // Instantiate the motion planner and controller
-  Planner motion_planner(spline_dist, front_margin, rear_margin, lane_width);
-  Controller controller(vel_step, lane_width, refresh, map_waypoints);
+  Planner motion_planner(SPLINE_DIST, FRONT_MARGIN, REAR_MARGIN, LANE_WIDTH);
+  Controller controller(VELOCITY_STEP, LANE_WIDTH, REFRESH, map_waypoints);
 
-  h.onMessage([&lane, &velocity, &target_vel, &refresh, &spline_dist,
+  h.onMessage([&lane, &velocity, &TARGET_VELOCITY, &REFRESH, &SPLINE_DIST,
                &motion_planner, &controller](uWS::WebSocket<uWS::SERVER> ws,
                                              char *data, size_t length,
                                              uWS::OpCode opCode) {
@@ -102,11 +102,11 @@ int main() {
 
           // Perception
           motion_planner.sense(sensor_fusion,
-                               static_cast<double>(prev_size) * refresh, car_s);
+                               static_cast<double>(prev_size) * REFRESH, car_s);
 
           // Motion planning
-          float spline_dist_ = spline_dist;
-          double target_vel_ = target_vel;
+          float spline_dist_ = SPLINE_DIST;
+          double target_vel_ = TARGET_VELOCITY;
           motion_planner.update(lane, target_vel_, spline_dist_);
 
           // Let controller update its information
