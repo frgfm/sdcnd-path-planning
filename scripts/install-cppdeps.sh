@@ -29,3 +29,11 @@ if [ ! -d "include/spdlog" ]; then
     mv spdlog-1.5.0/include/spdlog include/
     rm -rf v1.5.0.tar.gz
 fi
+
+# Catch
+if [ ! -d "lib" ]; then
+    mkdir lib
+fi
+if [ ! -f "lib/catch.hpp" ]; then
+    wget -P lib/ https://github.com/catchorg/Catch2/releases/download/v2.11.3/catch.hpp
+fi
