@@ -31,7 +31,7 @@ void Planner::sense(const vector<vector<double> > &sensor_fusion,
   }
 }
 
-void Planner::update(uint &lane, double &target_vel, float &spline_dist_) {
+void Planner::update(int &lane, double &target_vel, float &spline_dist_) {
   // Planning (lane selection and velocity update)
   if (!lane_avails[lane]) {
     // Check is lane change is possible
@@ -42,14 +42,14 @@ void Planner::update(uint &lane, double &target_vel, float &spline_dist_) {
       double max_margin = front_margin;
 
       // Take best front margin
-      for (uint i = 0; i < lane_avails.size(); i++) {
+      for (int i = 0; i < lane_avails.size(); i++) {
         if (i == lane) {
           continue;
         }
         // Good candidate
         if (lane_avails[i] && (module.front_margins[i] > max_margin)) {
           // Deal with edge case of 2-lanes difference
-          if (fabs(lane - i) == 2) {
+          if (std::abs(lane - i) == 2) {
             // Get inbetween lane
             uint lane_ = lane + 1;
             if (i < lane) {

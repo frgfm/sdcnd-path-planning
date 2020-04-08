@@ -36,7 +36,7 @@ int main() {
 
   // Lanes are numbered (0 | 1 | 2)
   // Start on lane 1 (middle lane)
-  uint lane = 1;
+  int lane = 1;
 
   // Inicial velocity in mph, and also reference velocity to target.
   double velocity = 0.0;

@@ -22,7 +22,7 @@ class Planner {
   void sense(const vector<vector<double> > &sensor_fusion,
              const double &delta_t, const double &car_s);
 
-  void update(uint &lane, double &target_vel, float &spline_dist_);
+  void update(int &lane, double &target_vel, float &spline_dist_);
 
   // Motion planning
   float spline_dist;
