@@ -1,6 +1,7 @@
 #include <uWS/uWS.h>
 #include <string>
 #include <vector>
+#include "constants.hpp"
 #include "controller.h"
 #include "helpers.h"
 #include "json.hpp"
@@ -12,6 +13,7 @@ using nlohmann::json;
 using std::exception;
 using std::string;
 using std::vector;
+using namespace constants;
 
 Helpers helpers;
 
@@ -40,29 +42,14 @@ int main() {
 
   // Inicial velocity in mph, and also reference velocity to target.
   double velocity = 0.0;
-  // Distance in meters between points that will be interpolated using spline
-  const float SPLINE_DIST = 30;
-  // Target velocity (mph)
-  const double TARGET_VELOCITY = 49.9;
-  // Velocity step (mph)
-  const double VELOCITY_STEP = 0.7;
-  // Refresh period in seconds
-  const double REFRESH = .02;  // 50Hz
-  // Lane width in meters
-  const float LANE_WIDTH = 4;
-  // Margin in meters with vehicle ahead before action in required
-  const double FRONT_MARGIN = 30;
-  // Margin in meters with vehicle behind before action in required
-  const double REAR_MARGIN = 5;
 
   // Instantiate the motion planner and controller
   Planner motion_planner(SPLINE_DIST, FRONT_MARGIN, REAR_MARGIN, LANE_WIDTH);
   Controller controller(VELOCITY_STEP, LANE_WIDTH, REFRESH, map_waypoints);
 
-  h.onMessage([&lane, &velocity, &TARGET_VELOCITY, &REFRESH, &SPLINE_DIST,
-               &motion_planner, &controller](uWS::WebSocket<uWS::SERVER> ws,
-                                             char *data, size_t length,
-                                             uWS::OpCode opCode) {
+  h.onMessage([&lane, &velocity, &motion_planner, &controller](
+                  uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
+                  uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
@@ -101,12 +88,12 @@ int main() {
           }
 
           // Perception
-          motion_planner.sense(sensor_fusion,
-                               static_cast<double>(prev_size) * REFRESH, car_s);
+          auto delta_t = static_cast<double>(prev_size) * REFRESH;
+          motion_planner.sense(sensor_fusion, delta_t, car_s);
 
           // Motion planning
-          float spline_dist_ = SPLINE_DIST;
-          double target_vel_ = TARGET_VELOCITY;
+          auto spline_dist_ = SPLINE_DIST;
+          auto target_vel_ = TARGET_VELOCITY;
           motion_planner.update(lane, target_vel_, spline_dist_);
 
           // Let controller update its information
