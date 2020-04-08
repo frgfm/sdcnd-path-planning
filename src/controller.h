@@ -1,7 +1,7 @@
 #pragma once
 
-#include <cmath>
 #include <array>
+#include <cmath>
 #include <vector>
 #include "helpers.h"
 #include "spline.h"
