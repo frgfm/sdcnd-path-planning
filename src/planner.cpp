@@ -1,10 +1,9 @@
 #include "planner.h"
 
 // Constructor
-Planner::Planner(const float &ref_spline, const double &max_front,
-                 const double &max_rear, const float &lwidth)
+Planner::Planner(const double &max_front, const double &max_rear,
+                 const float &lwidth)
     : module(lwidth) {
-  spline_dist = ref_spline;
   front_margin = max_front;
   rear_margin = max_rear;
   Planner::reset_env();
@@ -31,7 +30,7 @@ void Planner::sense(const vector<vector<double> > &sensor_fusion,
   }
 }
 
-void Planner::update(int &lane, double &target_vel, float &spline_dist_) {
+void Planner::update(int &lane, double &target_vel) {
   // Planning (lane selection and velocity update)
   if (!lane_avails[lane]) {
     // Check is lane change is possible
@@ -58,16 +57,13 @@ void Planner::update(int &lane, double &target_vel, float &spline_dist_) {
             // Check if that lane is available
             if (!lane_transitions[lane_]) {
               continue;
-              // Anticipate jerk issue (2 lane difference with same
-              // interpolation isnt smooth)
             } else {
-              // Limit jerk by changing spline interpolation
-              spline_dist_ = 2 * spline_dist;
+              // Take intermediate lane for now (the planner will select the next best lane afterwards)
+              best_lane = lane_;
             }
           } else {
-            spline_dist_ = spline_dist;
+            best_lane = i;
           }
-          best_lane = i;
           max_margin = module.front_margins[i];
         }
       }
