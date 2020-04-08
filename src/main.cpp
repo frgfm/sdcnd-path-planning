@@ -44,8 +44,9 @@ int main() {
   double velocity = 0.0;
 
   // Instantiate the motion planner and controller
-  Planner motion_planner(SPLINE_DIST, FRONT_MARGIN, REAR_MARGIN, LANE_WIDTH);
-  Controller controller(VELOCITY_STEP, LANE_WIDTH, REFRESH, map_waypoints);
+  Planner motion_planner(FRONT_MARGIN, REAR_MARGIN, LANE_WIDTH);
+  Controller controller(VELOCITY_STEP, LANE_WIDTH, REFRESH, SPLINE_DIST,
+                        map_waypoints);
 
   h.onMessage([&lane, &velocity, &motion_planner, &controller](
                   uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
@@ -92,9 +93,8 @@ int main() {
           motion_planner.sense(sensor_fusion, delta_t, car_s);
 
           // Motion planning
-          auto spline_dist_ = SPLINE_DIST;
           auto target_vel_ = TARGET_VELOCITY;
-          motion_planner.update(lane, target_vel_, spline_dist_);
+          motion_planner.update(lane, target_vel_);
 
           // Let controller update its information
           controller.update_readings(car_x, car_y, car_yaw, velocity, car_s,
@@ -103,7 +103,7 @@ int main() {
           velocity = controller.update_velocity(target_vel_);
           // Compute the trajectory
           std::array<vector<double>, 2> next_coords =
-              controller.get_trajectory(lane, spline_dist_);
+              controller.get_trajectory(lane);
 
           json msgJson;
 

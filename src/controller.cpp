@@ -4,11 +4,12 @@
  * Constructor.
  */
 Controller::Controller(const double &vel_delta, const float &lwidth,
-                       const float &refresh_period,
+                       const float &refresh_period, const float &t_spline_dist,
                        const array<vector<double>, 5> &map_waypoints) {
   vel_step = vel_delta;
   lane_width = lwidth;
   refresh = refresh_period;
+  spline_dist = t_spline_dist;
   waypoints = map_waypoints;
 }
 
@@ -42,9 +43,8 @@ double Controller::update_velocity(const double &target_vel) {
   return velocity;
 }
 
-std::array<vector<double>, 2> Controller::get_trajectory(
-    const uint &lane, const float &spline_dist) {
-  Controller::frame_trajectory(lane, spline_dist);
+std::array<vector<double>, 2> Controller::get_trajectory(const uint &lane) {
+  Controller::frame_trajectory(lane);
   return Controller::extrapolate_trajectory();
 }
 
@@ -97,7 +97,7 @@ std::array<vector<double>, 2> Controller::extrapolate_trajectory() {
   return next_coords;
 }
 
-void Controller::frame_trajectory(const uint &lane, const float &spline_dist) {
+void Controller::frame_trajectory(const uint &lane) {
   // Widely space points
   ptsx.clear();
   ptsy.clear();
@@ -132,7 +132,8 @@ void Controller::frame_trajectory(const uint &lane, const float &spline_dist) {
     ptsy.push_back(ref_y);
   }
 
-  // In Frenet coords, add 30m spaced waypoints ahead of starting ref
+  // In Frenet coords, waypoints are spaced by spline_dist meters ahead of
+  // starting ref
   for (uint i = 1; i <= 3; ++i) {
     vector<double> next_wp =
         helpers.getXY(s + i * spline_dist, lane_width * (lane + 0.5),
