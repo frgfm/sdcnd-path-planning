@@ -25,7 +25,7 @@ class Planner {
 
   // Motion planning
   double front_margin, rear_margin;
-  array<bool, 3> lane_avails, lane_transitions;
+  array<bool, 3> is_avail, is_allowed;
 
  private:
   void reset_env();
