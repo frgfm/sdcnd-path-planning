@@ -19,7 +19,7 @@ fi
 
 # Spline
 if [ ! -f "include/spline.h" ]; then
-    wget -P include/ hhttps://kluge.in-chemnitz.de/opensource/spline/spline.h
+    wget -P include/ https://kluge.in-chemnitz.de/opensource/spline/spline.h
 fi
 
 # spdlog
