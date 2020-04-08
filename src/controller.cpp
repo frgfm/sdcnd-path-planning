@@ -58,7 +58,7 @@ std::array<vector<double>, 2> Controller::extrapolate_trajectory() {
   vector<double> next_ys;
 
   // Start with previous path points from last time
-  for (uint i = 0; i < prev_xs.size(); i++) {
+  for (uint i = 0; i < prev_xs.size(); ++i) {
     next_xs.push_back(prev_xs[i]);
     next_ys.push_back(prev_ys[i]);
   }
@@ -72,7 +72,7 @@ std::array<vector<double>, 2> Controller::extrapolate_trajectory() {
   double N = (target_dist / (refresh * velocity / 2.24));
 
   // Fill up the rest of our planner, force 50 points
-  for (uint i = 1; i <= 50 - prev_xs.size(); i++) {
+  for (uint i = 1; i <= 50 - prev_xs.size(); ++i) {
     double x_point = x_add_on + target_x / N;
     double y_point = s(x_point);
     x_add_on = x_point;
@@ -133,7 +133,7 @@ void Controller::frame_trajectory(const uint &lane, const float &spline_dist) {
   }
 
   // In Frenet coords, add 30m spaced waypoints ahead of starting ref
-  for (uint i = 1; i <= 3; i++) {
+  for (uint i = 1; i <= 3; ++i) {
     vector<double> next_wp =
         helpers.getXY(s + i * spline_dist, lane_width * (lane + 0.5),
                       waypoints[2], waypoints[0], waypoints[1]);
@@ -142,7 +142,7 @@ void Controller::frame_trajectory(const uint &lane, const float &spline_dist) {
   }
 
   // Shift car angle
-  for (uint i = 0; i < ptsx.size(); i++) {
+  for (uint i = 0; i < ptsx.size(); ++i) {
     double shift_x = ptsx[i] - ref_x;
     double shift_y = ptsy[i] - ref_y;
     // Make car angle tangent to next position direction

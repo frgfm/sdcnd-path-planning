@@ -22,7 +22,7 @@ void Planner::sense(const vector<vector<double> > &sensor_fusion,
                     const double &delta_t, const double &car_s) {
   Planner::reset_env();
   module.update(sensor_fusion, delta_t, car_s);
-  for (uint i = 0; i < lane_avails.size(); i++) {
+  for (uint i = 0; i < lane_avails.size(); ++i) {
     lane_avails[i] = (module.front_margins[i] > front_margin) &&
                      (module.rear_margins[i] > rear_margin);
     // Allow transition through lanes with lower front margin
@@ -42,7 +42,7 @@ void Planner::update(int &lane, double &target_vel, float &spline_dist_) {
       double max_margin = front_margin;
 
       // Take best front margin
-      for (int i = 0; i < lane_avails.size(); i++) {
+      for (int i = 0; i < lane_avails.size(); ++i) {
         if (i == lane) {
           continue;
         }
