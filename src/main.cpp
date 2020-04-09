@@ -44,11 +44,11 @@ int main() {
   double velocity = 0.0;
 
   // Instantiate the motion planner and controller
-  Planner motion_planner(FRONT_MARGIN, REAR_MARGIN, LANE_WIDTH);
+  Planner behavior_planner(FRONT_MARGIN, REAR_MARGIN, LANE_WIDTH);
   Controller controller(VELOCITY_STEP, LANE_WIDTH, REFRESH, SPLINE_DIST,
                         map_waypoints);
 
-  h.onMessage([&lane, &velocity, &motion_planner, &controller](
+  h.onMessage([&lane, &velocity, &behavior_planner, &controller](
                   uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                   uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
@@ -90,11 +90,11 @@ int main() {
 
           // Perception
           auto delta_t = static_cast<double>(prev_size) * REFRESH;
-          motion_planner.sense(sensor_fusion, delta_t, car_s);
+          behavior_planner.sense(sensor_fusion, delta_t, car_s);
 
           // Motion planning
           auto target_vel_ = TARGET_VELOCITY;
-          motion_planner.update(lane, target_vel_);
+          behavior_planner.update(lane, target_vel_);
 
           // Let controller update its information
           controller.update_readings(car_x, car_y, car_yaw, velocity, car_s,
